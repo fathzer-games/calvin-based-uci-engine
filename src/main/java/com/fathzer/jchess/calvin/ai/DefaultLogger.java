@@ -1,0 +1,70 @@
+package com.fathzer.jchess.calvin.ai;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fathzer.games.ai.SearchResult;
+import com.fathzer.games.ai.SearchStatistics;
+import com.fathzer.games.ai.evaluation.EvaluatedMove;
+import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine;
+import com.fathzer.games.ai.iterativedeepening.IterativeDeepeningEngine.EngineEventLogger;
+import com.fathzer.games.ai.iterativedeepening.SearchHistory;
+import com.fathzer.jchess.calvin.CalvinMoveGenerator;
+import com.kelseyde.calvin.board.Move;
+import com.kelseyde.calvin.utils.notation.FEN;
+
+public class DefaultLogger implements EngineEventLogger<Move, CalvinMoveGenerator> {
+	private static final Logger log = LoggerFactory.getLogger(DefaultLogger.class);
+	private final IterativeDeepeningEngine<Move, CalvinMoveGenerator> engine;
+
+	public DefaultLogger(IterativeDeepeningEngine<Move, CalvinMoveGenerator> engine) {
+		super();
+		this.engine = engine;
+	}
+
+	@Override
+	public void logSearchAtDepth(int depth, SearchStatistics stat, SearchResult<Move> bestMoves) {
+		final long duration = stat.getDurationMs();
+		final List<EvaluatedMove<Move>> cut = bestMoves.getCut();
+		log.info("{} move generations, {} moves generated, {} moves played, {} evaluations for {} moves at depth {} by {} threads in {}ms -> {}",
+				stat.getMoveGenerationCount(), stat.getGeneratedMoveCount(), stat.getMovePlayedCount(), stat.getEvaluationCount(), bestMoves.getList().size(),
+				depth, engine.getParallelism(), duration, cut.isEmpty()?null:cut.get(0).getEvaluation());
+		log.info("Search at depth {} returns: {}", depth, bestMoves.getCut());
+	}
+
+	
+	@Override
+	public void logSearchStart(CalvinMoveGenerator board, IterativeDeepeningEngine<Move, CalvinMoveGenerator> engine) {
+		log.info("--- Start evaluation for {} with size={}, accuracy={}, maxDepth={}---", FEN.toFEN(board.getBoard()), engine.getDeepeningPolicy().getSize(), engine.getDeepeningPolicy().getAccuracy(), engine.getDeepeningPolicy().getDepth());
+	}
+
+	@Override
+	public void logTimeOut(int depth) {
+		log.info("Search interrupted by timeout at depth {}",depth);
+	}
+
+	@Override
+	public void logEndedByPolicy(int depth) {
+		log.info("Search ended by deepening policy at depth {}", depth);
+	}
+	
+	@Override
+	public void logSearchEnd(CalvinMoveGenerator board, SearchHistory<Move> result) {
+		log.info("--- End of iterative evaluation returns: {}", result.getBestMoves());
+	}
+
+	@Override
+	public void logMoveChosen(CalvinMoveGenerator board, EvaluatedMove<Move> evaluatedMove) {
+		if (evaluatedMove==null) {
+			log.info("No valid move found");
+		} else {
+			Move move = evaluatedMove.getContent();
+			log.info("Move chosen :{}", move);
+			final List<Move> pv = evaluatedMove.getPrincipalVariation();
+			log.info("pv: {}", pv);
+		}
+	}
+}
+
