@@ -61,12 +61,12 @@ public class CalvinBasedEngine extends AbstractEngine<Move, CalvinMoveGenerator>
 	
 	@Override
 	public String getId() {
-		return "ChessLib";
+		return "JChessOnCalvin";
 	}
 	
 	@Override
 	public String getAuthor() {
-		return "Jean-Marc Astesana (Fathzer), Move generator is from Ben-Hur Carlos Vieira Langoni Junior";
+		return "Jean-Marc Astesana (Fathzer), Move generator is from Dan Kelsey";
 	}
 	
 	DeferredReadMoveLibrary<Move, CalvinMoveGenerator> getOwnBook() {

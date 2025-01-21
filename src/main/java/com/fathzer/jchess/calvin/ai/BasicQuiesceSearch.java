@@ -11,16 +11,7 @@ public class BasicQuiesceSearch extends AbstractBasicQuiesceEvaluator<Move, Calv
 	@Override
 	protected List<Move> getMoves(SearchContext<Move, CalvinMoveGenerator> context, int quiesceDepth) {
 		final CalvinMoveGenerator gamePosition = context.getGamePosition();
-		final List<Move> moves = gamePosition.isCheck() ? gamePosition.getMoves() : gamePosition.getCaptures();
-		try {
-			moves.sort(new BasicMoveComparator(gamePosition));
-			System.out.println("Nice on "+moves.getClass());
-		} catch (UnsupportedOperationException e) {
-			System.out.println("Fuck on "+moves.getClass());
-			final BasicMoveComparator c = new BasicMoveComparator(gamePosition);
-			moves.sort(c);
-		}
-		return moves;
+		return gamePosition.isCheck() ? gamePosition.getMoves() : gamePosition.getCaptures();
 	}
 
 	@Override

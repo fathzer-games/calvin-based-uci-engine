@@ -81,10 +81,7 @@ public class CalvinMoveData implements MoveData<Move, CalvinMoveGenerator> {
 			} else {
 				this.castlingRookIndex = -1;
 				this.movingDestination = move.to();
-				this.captured = board.getBoard().pieceAt(movingDestination).ordinal()+1;
-				if (this.captured!=0) {
-					this.capturedIndex = this.movingDestination;
-				}
+				fillStandardCapture(board);
 			}
 		} else {
 			// Not a king move => no castling
@@ -97,15 +94,19 @@ public class CalvinMoveData implements MoveData<Move, CalvinMoveGenerator> {
 				this.promotion = 0;
 			} else {
 				this.promotion = move.isPromotion() ? move.promoPiece().ordinal()+1 : 0;
-				final Piece capturedPiece = board.getBoard().pieceAt(movingDestination);
-				if (capturedPiece!=null) {
-					this.captured = capturedPiece.ordinal()+1;
-					this.capturedIndex = this.movingDestination^56;
-				}
+				fillStandardCapture(board);
 			}
 		}
 		this.movingIndex = this.movingIndex^56;
 		this.movingDestination = this.movingDestination^56;
 		return true;
+	}
+
+	private void fillStandardCapture(CalvinMoveGenerator board) {
+		final Piece capturedPiece = board.getBoard().pieceAt(movingDestination);
+		if (capturedPiece!=null) {
+			this.captured = capturedPiece.ordinal()+1;
+			this.capturedIndex = this.movingDestination^56;
+		}
 	}
 }

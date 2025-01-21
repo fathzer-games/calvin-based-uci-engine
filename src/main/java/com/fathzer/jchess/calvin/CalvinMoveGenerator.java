@@ -126,6 +126,10 @@ public class CalvinMoveGenerator implements MoveGenerator<Move>, HashProvider {
 	}
 	
 	public List<Move> getCaptures() {
-		return generator.generateMoves(board, MoveFilter.CAPTURES_ONLY);
+		final List<Move> moves = generator.generateMoves(board, MoveFilter.CAPTURES_ONLY);
+		if (comparator!=null) {
+			moves.sort(comparator);
+		}
+		return moves;
 	}
 }
