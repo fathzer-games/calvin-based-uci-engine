@@ -1,4 +1,4 @@
-package com.fathzer.jchess.chesslib.ai.eval;
+package com.fathzer.jchess.calvin.ai.eval;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,7 +11,6 @@ import com.fathzer.calvin.MoveBuilder;
 import com.fathzer.games.MoveGenerator.MoveConfidence;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.jchess.calvin.CalvinMoveGenerator;
-import com.fathzer.jchess.calvin.ai.eval.NaiveEvaluator;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.utils.notation.FEN;
 

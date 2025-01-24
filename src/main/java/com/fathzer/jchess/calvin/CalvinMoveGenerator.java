@@ -33,19 +33,19 @@ public class CalvinMoveGenerator implements MoveGenerator<Move>, HashProvider {
 
 	@Override
 	public boolean makeMove(Move move, MoveConfidence confidence) {
-		if (MoveConfidence.UNSAFE==confidence) {
-			if (!generator.isPseudoLegal(board, move)) {
-				return false;
-			}
-	        board.makeMove(move);
-	        boolean legal = !generator.isCheck(board, !board.isWhite());
-	        if (!legal) {
-	        	board.unmakeMove();
-	        }
-	        return legal;
-		} else {
+		if (MoveConfidence.LEGAL==confidence) {
 			return board.makeMove(move);
 		}
+		if (MoveConfidence.UNSAFE==confidence && !generator.isPseudoLegal(board, move)) {
+			return false;
+		}
+		if (!board.makeMove(move)) {
+			return false;
+		} else if (generator.isCheck(board, !board.isWhite())) {
+        	board.unmakeMove();
+        	return false;
+		}
+		return true;
 	}
 	
 	@Override
@@ -89,7 +89,7 @@ public class CalvinMoveGenerator implements MoveGenerator<Move>, HashProvider {
 
 	@Override
 	public Status getContextualStatus() {
-		return Draw.isEffectiveDraw(board) ? Status.DRAW : Status.PLAYING;
+		return Draw.isThreefoldRepetition(board) || Draw.isFiftyMoveRule(board) || Draw.isInsufficientMaterial(board) ? Status.DRAW : Status.PLAYING;
 	}
 
 	@Override

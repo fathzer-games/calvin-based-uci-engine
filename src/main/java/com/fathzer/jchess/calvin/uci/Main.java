@@ -74,8 +74,8 @@ public class Main extends ExtendedUCI {
 	}
 
 	private void speedTest(Deque<String> args) {
-		if (engine instanceof CalvinBasedEngine chesslibEngine) {
-			out("completed in "+new SpeedTest<>(chesslibEngine, this::out).run()+"ms");
+		if (engine instanceof CalvinBasedEngine calvinBasedEngine) {
+			out("completed in "+new SpeedTest<>(calvinBasedEngine, this::out).run()+"ms");
 		} else {
 			debug("This engine does not support this command");
 		}

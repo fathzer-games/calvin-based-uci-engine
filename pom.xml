@@ -15,18 +15,21 @@
 
 	<name>calvin-uci-engine</name>
 	<description>A basic uci engine.</description>
-	<!--<url>https://github.com/fathzer-games/chesslib-uci-engine</url>-->
+	<url>https://github.com/fathzer-games/calvin-based-uci-engine</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.release>17</maven.compiler.release>
+		<check-dependencies-java-version>17</check-dependencies-java-version>
+		<sonar.organization>fathzer-games</sonar.organization>
+		<customized.jar.name>calvin-based-uci-engine</customized.jar.name>
 	</properties>
 	
 	<dependencies>
 		<dependency>
-			<groupId>com.kelseyde</groupId>
-			<artifactId>calvin-chess</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<groupId>com.fathzer</groupId>
+			<artifactId>calvin-move-generator</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fathzer</groupId>
@@ -41,12 +44,12 @@
 		<dependency>
 			<groupId>com.fathzer</groupId>
 			<artifactId>jchess-uci</artifactId>
-			<version>2.0.4-SNAPSHOT</version>
+			<version>2.0.5-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-			<version>20240205</version>
+			<version>20250107</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fathzer</groupId>
@@ -56,18 +59,18 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>2.0.7</version>
+			<version>2.0.16</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-simple</artifactId>
-			<version>2.0.7</version>
+			<version>2.0.16</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
-			<version>5.10.2</version>
+			<version>5.11.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -77,4 +80,49 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.4.1</version>
+				<configuration>
+					<finalName>${customized.jar.name}</finalName>
+					<minimizeJar>true</minimizeJar>
+					<transformers>
+						<transformer
+							implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+							<mainClass>com.fathzer.jchess.calvin.uci.Main</mainClass>
+						</transformer>
+					</transformers>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Prevent maven from deploying the produced files to local
+			repository -->
+			<plugin>
+				<artifactId>maven-install-plugin</artifactId>
+				<version>3.0.1</version> <!-- IMPORTANT: versions previous 2.4
+				ignore skip configuration -->
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<!-- Prevent maven from deploying the produced files -->
+			<plugin>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

@@ -107,6 +107,8 @@ public class CalvinMoveData implements MoveData<Move, CalvinMoveGenerator> {
 		if (capturedPiece!=null) {
 			this.captured = capturedPiece.ordinal()+1;
 			this.capturedIndex = this.movingDestination^56;
+		} else {
+			this.captured = 0;
 		}
 	}
 }
