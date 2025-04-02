@@ -18,7 +18,7 @@ import com.fathzer.games.ai.moveselector.StaticMoveSelector;
 import com.fathzer.games.ai.time.BasicTimeManager;
 import com.fathzer.games.ai.transposition.SizeUnit;
 import com.fathzer.games.ai.transposition.TranspositionTable;
-import com.fathzer.games.perft.TestableMoveGeneratorBuilder;
+import com.fathzer.games.perft.FromPositionMoveGeneratorBuilder;
 import com.fathzer.games.util.PhysicalCores;
 import com.fathzer.games.util.exec.ExecutionContext;
 import com.fathzer.jchess.calvin.CalvinMoveGenerator;
@@ -40,7 +40,7 @@ import com.kelseyde.calvin.board.Board;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.utils.notation.FEN;
 
-public class CalvinBasedEngine extends AbstractEngine<Move, CalvinMoveGenerator> implements TestableMoveGeneratorBuilder<Move, CalvinMoveGenerator>, Displayable {
+public class CalvinBasedEngine extends AbstractEngine<Move, CalvinMoveGenerator> implements FromPositionMoveGeneratorBuilder<Move, CalvinMoveGenerator>, Displayable {
 	private static final List<EvaluatorConfiguration<Move, CalvinMoveGenerator>> EVALUATORS = Arrays.asList(
 			new EvaluatorConfiguration<>("pesto",PestoEvaluator::new),
 			new EvaluatorConfiguration<>("simplified",SimplifiedEvaluator::new),
@@ -85,7 +85,7 @@ public class CalvinBasedEngine extends AbstractEngine<Move, CalvinMoveGenerator>
 
 	@Override
 	public void setStartPosition(String fen) {
-		board = fromFEN(fen);
+		board = fromPosition(fen);
 		board.setMoveComparatorBuilder(BasicMoveComparator::new);
 	}
 	
@@ -116,7 +116,7 @@ public class CalvinBasedEngine extends AbstractEngine<Move, CalvinMoveGenerator>
 	}
 
 	@Override
-	public CalvinMoveGenerator fromFEN(String fen) {
+	public CalvinMoveGenerator fromPosition(String fen) {
 		final Board internalBoard = Board.from(fen);
 		return new CalvinMoveGenerator(internalBoard);
 	}
@@ -124,8 +124,8 @@ public class CalvinBasedEngine extends AbstractEngine<Move, CalvinMoveGenerator>
 	public static IterativeDeepeningEngine<Move, CalvinMoveGenerator> buildEngine(Supplier<Evaluator<Move, CalvinMoveGenerator>> evaluatorBuilder, int maxDepth) {
 		final IterativeDeepeningEngine<Move, CalvinMoveGenerator> engine = new IterativeDeepeningEngine<>(new ChessDeepeningPolicy(maxDepth), new TT(16, SizeUnit.MB), evaluatorBuilder) {
 			@Override
-			protected Negamax<Move, CalvinMoveGenerator> buildAi(ExecutionContext<SearchContext<Move, CalvinMoveGenerator>> context) {
-				final Negamax<Move, CalvinMoveGenerator> negaMax = (Negamax<Move, CalvinMoveGenerator>) super.buildAi(context);
+			protected Negamax<Move, CalvinMoveGenerator> buildAI(ExecutionContext<SearchContext<Move, CalvinMoveGenerator>> context) {
+				final Negamax<Move, CalvinMoveGenerator> negaMax = (Negamax<Move, CalvinMoveGenerator>) super.buildAI(context);
 				negaMax.setQuiesceEvaluator(new BasicQuiesceSearch());
 				return negaMax;
 			}
@@ -147,7 +147,7 @@ public class CalvinBasedEngine extends AbstractEngine<Move, CalvinMoveGenerator>
 	}
 
 	@Override
-	protected TranspositionTable<Move> buildTranspositionTable(int sizeInMB) {
+	protected TranspositionTable<Move, CalvinMoveGenerator> buildTranspositionTable(int sizeInMB) {
 		return new TT(sizeInMB, SizeUnit.MB);
 	}
 }

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import com.fathzer.calvin.FENtoMoveGeneratorBuilder;
 import com.fathzer.calvin.MoveBuilder;
 import com.fathzer.games.MoveGenerator;
+import com.fathzer.games.ai.DepthFirstSearchParameters;
 import com.fathzer.games.ai.Negamax;
 import com.fathzer.games.ai.SearchContext;
 import com.fathzer.games.ai.SearchParameters;
@@ -24,7 +25,6 @@ import com.fathzer.games.ai.iterativedeepening.SearchHistory;
 import com.fathzer.games.ai.evaluation.Evaluator;
 import com.fathzer.games.util.SelectiveComparator;
 import com.fathzer.games.util.exec.ExecutionContext;
-import com.fathzer.games.util.exec.SingleThreadContext;
 import com.fathzer.jchess.calvin.CalvinMoveGenerator;
 import com.fathzer.jchess.calvin.ai.eval.NaiveEvaluator;
 import com.fathzer.jchess.calvin.uci.CalvinBasedEngine;
@@ -48,7 +48,7 @@ class MinimaxEngineTest implements FENtoMoveGeneratorBuilder, MoveBuilder {
 		final List<EvaluatedMove<Move>> moves = getBests(mme4, fromFEN("7k/5p1Q/5P1N/5PPK/6PP/8/8/8 b - - 6 5", StrictMoveEvaluator::new));
 //show(moves);
 		assertEquals(1, moves.size());
-		assertEquals("h8h7", toUCI(moves.get(0).getContent()));
+		assertEquals("h8h7", toUCI(moves.get(0).getMove()));
 		assertEquals(-800, moves.get(0).getScore());
 	}
 	
@@ -58,7 +58,7 @@ class MinimaxEngineTest implements FENtoMoveGeneratorBuilder, MoveBuilder {
 	
 	private <M, B extends MoveGenerator<M>> List<EvaluatedMove<M>> getBests(IterativeDeepeningEngine<M, B> engine, B moveGenerator) {
 		final SearchHistory<M> bestMoves = engine.getBestMoves(moveGenerator);
-		return bestMoves.getBestMoves();
+		return bestMoves.getAccurateMoves();
 	}
 	
 	@Test
@@ -89,7 +89,7 @@ class MinimaxEngineTest implements FENtoMoveGeneratorBuilder, MoveBuilder {
 		max = moves.get(0).getEvaluation();
 		assertEquals(Type.WIN, max.getType());
 		assertEquals(1, max.getCountToEnd());
-		mv = moves.get(0).getContent();
+		mv = moves.get(0).getMove();
 		assertEquals("c3c2", toUCI(mv));
 		// Warning, due to transposition table effects, the second best move (M+3) can be detected even if we search at depth 4!
 		assertTrue(moves.get(1).getScore()<moves.get(0).getScore());
@@ -102,7 +102,7 @@ class MinimaxEngineTest implements FENtoMoveGeneratorBuilder, MoveBuilder {
 		assertEquals(Type.WIN, max.getType());
 		assertEquals(2, max.getCountToEnd());
 		assertTrue(moves.get(1).getScore()<max.getScore());
-		mv = moves.get(0).getContent();
+		mv = moves.get(0).getMove();
 		assertEquals("b3a1", toUCI(mv));
 		
 		// Check in 2 with blacks
@@ -113,7 +113,7 @@ class MinimaxEngineTest implements FENtoMoveGeneratorBuilder, MoveBuilder {
 		assertEquals(Type.WIN, max.getType());
 		assertEquals(2, max.getCountToEnd());
 		assertTrue(moves.get(1).getScore()<max.getScore());
-		assertEquals("g6h8", toUCI(moves.get(0).getContent()));
+		assertEquals("g6h8", toUCI(moves.get(0).getMove()));
 		
 		
 		// Check in 3
@@ -123,7 +123,7 @@ class MinimaxEngineTest implements FENtoMoveGeneratorBuilder, MoveBuilder {
 		engine.getDeepeningPolicy().setAccuracy(100);
 		moves = getBests(engine, fromFEN("r2k1r2/pp1b2pp/1b2Pn2/2p5/Q1B2Bq1/2P5/P5PP/3R1RK1 w - - 0 1", StrictMoveEvaluator::new));
 //show(moves);
-		mv = moves.get(0).getContent();
+		mv = moves.get(0).getMove();
 		assertEquals("d1d7", toUCI(mv));
 	}
 	
@@ -133,13 +133,13 @@ class MinimaxEngineTest implements FENtoMoveGeneratorBuilder, MoveBuilder {
 		final Evaluator<Move,CalvinMoveGenerator> basicEvaluator = new NaiveEvaluator();
 		basicEvaluator.init(board);
 		SearchContext<Move, CalvinMoveGenerator> context = SearchContext.get(board, () -> basicEvaluator);
-		try (ExecutionContext<SearchContext<Move, CalvinMoveGenerator>> exec = new SingleThreadContext<>(context)) {
+		try (ExecutionContext<SearchContext<Move, CalvinMoveGenerator>> exec = ExecutionContext.get(1, context)) {
 			Negamax<Move, CalvinMoveGenerator> ai = new Negamax<>(exec);
 			List<Move> l = new ArrayList<>();
 			l.add(move(board, "h1g1"));
 			l.add(move(board, "f2f3"));
 			l.add(move(board, "f2f4"));
-			final SearchParameters params = new SearchParameters(4, Integer.MAX_VALUE, 0);
+			final DepthFirstSearchParameters params = new DepthFirstSearchParameters(4, Integer.MAX_VALUE, 0);
 			final List<EvaluatedMove<Move>> eval = ai.getBestMoves(l, params).getCut();
 			assertEquals(3, eval.size());
 			for (EvaluatedMove<Move> e : eval) {
@@ -200,7 +200,7 @@ class MinimaxEngineTest implements FENtoMoveGeneratorBuilder, MoveBuilder {
 		engine.getDeepeningPolicy().setSize(1);
 		engine.getDeepeningPolicy().setAccuracy(0);
 		final SearchHistory<Move> history = engine.getBestMoves(board);
-		List<EvaluatedMove<Move>> bestMoves = history.getBestMoves();
+		List<EvaluatedMove<Move>> bestMoves = history.getAccurateMoves();
 		System.out.println(bestMoves);
 		assertEquals(2, bestMoves.size());
 	}
@@ -211,6 +211,6 @@ class MinimaxEngineTest implements FENtoMoveGeneratorBuilder, MoveBuilder {
 	void bug20230821() {
 		// Not a bug, just a problem with evaluation function
 		IterativeDeepeningEngine<Move, CalvinMoveGenerator> engine = CalvinBasedEngine.buildEngine(NaiveEvaluator::new, 7);
-		System.out.println(engine.getBestMoves(from("8/6k1/6p1/1N6/6K1/R7/4B3/8 w - - 21 76")).getBest());
+		System.out.println(engine.getBestMoves(from("8/6k1/6p1/1N6/6K1/R7/4B3/8 w - - 21 76")).getAccurateMoves().get(0));
 	}
 }
