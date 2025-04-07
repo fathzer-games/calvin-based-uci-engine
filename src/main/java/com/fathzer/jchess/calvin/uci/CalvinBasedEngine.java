@@ -1,5 +1,7 @@
 package com.fathzer.jchess.calvin.uci;
 
+import static com.fathzer.jchess.uci.Engine.*;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -37,9 +39,13 @@ import com.fathzer.jchess.uci.helper.AbstractEngine;
 import com.fathzer.jchess.uci.helper.DeferredReadMoveLibrary;
 import com.fathzer.jchess.uci.helper.EvaluatorConfiguration;
 import com.kelseyde.calvin.board.Board;
+import com.kelseyde.calvin.board.ChessVariant;
 import com.kelseyde.calvin.board.Move;
 import com.kelseyde.calvin.utils.notation.FEN;
 
+@Id("JChessOnCalvin")
+@Author("Jean-Marc Astesana (Fathzer), Move generator is from Dan Kelsey")
+@Chess960Supported
 public class CalvinBasedEngine extends AbstractEngine<Move, CalvinMoveGenerator> implements FromPositionMoveGeneratorBuilder<Move, CalvinMoveGenerator>, Displayable {
 	private static final List<EvaluatorConfiguration<Move, CalvinMoveGenerator>> EVALUATORS = Arrays.asList(
 			new EvaluatorConfiguration<>("pesto",PestoEvaluator::new),
@@ -49,24 +55,17 @@ public class CalvinBasedEngine extends AbstractEngine<Move, CalvinMoveGenerator>
 	
 	private final DeferredReadMoveLibrary<Move, CalvinMoveGenerator> ownBook;
 
+	private ChessVariant variant;
+
 	public CalvinBasedEngine() {
 		this (null);
+		variant = ChessVariant.STANDARD;
 	}
 
 	public CalvinBasedEngine(DeferredReadMoveLibrary<Move, CalvinMoveGenerator> ownBook) {
 		super (buildEngine(EVALUATORS.get(0).getBuilder(), 20), new BasicTimeManager<>(RemainingMoveOracle.INSTANCE));
 		setEvaluators(EVALUATORS);
 		this.ownBook = ownBook;
-	}
-	
-	@Override
-	public String getId() {
-		return "JChessOnCalvin";
-	}
-	
-	@Override
-	public String getAuthor() {
-		return "Jean-Marc Astesana (Fathzer), Move generator is from Dan Kelsey";
 	}
 	
 	DeferredReadMoveLibrary<Move, CalvinMoveGenerator> getOwnBook() {
@@ -81,6 +80,11 @@ public class CalvinBasedEngine extends AbstractEngine<Move, CalvinMoveGenerator>
 	@Override
 	public void setOwnBook(boolean activate) {
 		engine.setOpenings(activate?ownBook:null);
+	}
+	
+	@Override
+	public void setChess960(boolean chess960Mode) {
+		this.variant = chess960Mode ? ChessVariant.CHESS960 : ChessVariant.STANDARD;
 	}
 
 	@Override
@@ -117,7 +121,7 @@ public class CalvinBasedEngine extends AbstractEngine<Move, CalvinMoveGenerator>
 
 	@Override
 	public CalvinMoveGenerator fromPosition(String fen) {
-		final Board internalBoard = Board.from(fen);
+		final Board internalBoard = FEN.toBoard(fen, variant);
 		return new CalvinMoveGenerator(internalBoard);
 	}
 	
